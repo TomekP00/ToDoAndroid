@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Pum-todo</string>
+    <string name="app_name">TO DO</string>
+    <string name="item1">Ukończone</string>
+    <string name="item2">Nie ukończone</string>
+    <string name="todoTitleHint">Tytuł</string>
+    <string name="todoTitleNote">Notatka</string>
+    <string name="todoTitleDate">Data</string>
 </resources>
