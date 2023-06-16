@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,6 +29,9 @@ public class MainActivity extends AppCompatActivity {
 
     List<String> titles;
     List<String> subtitles;
+    Adapter adapter;
+
+    private static final int TODO_ACTIVITY_REQUEST_CODE = 1;
 
     RecyclerView recyclerView;
     @Override
@@ -39,14 +43,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 //        dbHelper = new DBHelper(this);
 
-        recyclerView = findViewById(R.id.recycler_view);
-
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        titles = Arrays.asList("Tytuł 1", "Tytuł 2", "Tytuł 3");
-        subtitles = Arrays.asList("Podtytuł 1", "Podtytuł 2", "Podtytuł 3");
-        Adapter adapter = new Adapter(titles, subtitles);
-        //adapter.addData("test", "test2");
-        recyclerView.setAdapter(adapter);
+        initRecyclerView();
 
         addTodoBtn = findViewById(R.id.floatingActionButton);
         addTodoBtn.setOnClickListener(new View.OnClickListener() {
@@ -60,12 +57,45 @@ public class MainActivity extends AppCompatActivity {
 
     private void openTodoActivity() {
         Intent intent = new Intent(this, AddTodoActivity.class);
-
-        startActivity(intent);
-
-
+        intent.putExtra("test", "TuDziała");
+        startActivityForResult(intent, TODO_ACTIVITY_REQUEST_CODE);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == TODO_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                recyclerView.setLayoutManager(new LinearLayoutManager(this));
+                Adapter adapter = new Adapter(titles, subtitles);
+                recyclerView.setAdapter(adapter);
+                int duration = Toast.LENGTH_SHORT;
+                String title = data.getStringExtra("title");
+                String date = data.getStringExtra("date");
+                titles.add(title);
+                subtitles.add(date);
+                adapter.notifyDataSetChanged();
+                CharSequence text = (CharSequence) "Dodano nowe zadanie";
+                Toast toast = Toast.makeText(MainActivity.this, text, duration);
+                toast.show();
+            }
+            else if (resultCode == RESULT_CANCELED) {
+                int duration = Toast.LENGTH_SHORT;
+                CharSequence text = (CharSequence) "Blad";
+                Toast toast = Toast.makeText(MainActivity.this, text, duration);
+                toast.show();
+            }
+        }
+    }
+
+    private void initRecyclerView() {
+        recyclerView = findViewById(R.id.recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        titles = new ArrayList<>();
+        subtitles = new ArrayList<>();
+        adapter = new Adapter(titles, subtitles);
+        recyclerView.setAdapter(adapter);
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -81,19 +111,5 @@ public class MainActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         return super.onSupportNavigateUp();
     }
-
-
-    public void onToDoResult(Intent intent) {
-            if (intent != null) {
-                int duration = Toast.LENGTH_SHORT;
-               String title = intent.getStringExtra("title");
-               String date = intent.getStringExtra("date");
-                Toast toast = Toast.makeText(this , 'D', duration);
-                toast.show();
-                //przetwarzanie
-                //adapter.addData(title, date);
-        }
-    }
-
 
 }

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -25,6 +26,7 @@ public class AddTodoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_add_todo);
 
         Toolbar toolbar = findViewById(R.id.toolbar2);
@@ -62,19 +64,20 @@ public class AddTodoActivity extends AppCompatActivity {
        button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent resultTntent = new Intent(AddTodoActivity.this, MainActivity.class);
+                Intent resultIntent = new Intent();
 
                 String correctTitle = title.getText().toString();
                 EditText editText = textFiledCalendar.getEditText();
                 String correctDate = editText.getText().toString();
-                resultTntent.putExtra("title", correctTitle);
-                resultTntent.putExtra("date", correctDate);
 
-                startActivity(resultTntent);
+                resultIntent.putExtra("title", correctTitle);
+                resultIntent.putExtra("date", correctDate);
+
+                setResult(RESULT_OK, resultIntent);
                 finish();
+
             }
         });
-
 
     }
 }
