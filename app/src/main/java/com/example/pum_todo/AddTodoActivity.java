@@ -1,11 +1,15 @@
 package com.example.pum_todo;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
@@ -31,6 +35,8 @@ public class AddTodoActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Dodaj zadanie");
         }
 
+        EditText title = findViewById(R.id.title); //Tytul
+        EditText note = findViewById(R.id.note); //Opis
         Button button = findViewById(R.id.button);
         TextInputLayout textFiledCalendar = findViewById(R.id.textField3);
 
@@ -52,5 +58,23 @@ public class AddTodoActivity extends AppCompatActivity {
                 datePicker.show(getSupportFragmentManager(), "tag");
             }
         });
+
+       button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent resultTntent = new Intent(AddTodoActivity.this, MainActivity.class);
+
+                String correctTitle = title.getText().toString();
+                EditText editText = textFiledCalendar.getEditText();
+                String correctDate = editText.getText().toString();
+                resultTntent.putExtra("title", correctTitle);
+                resultTntent.putExtra("date", correctDate);
+
+                startActivity(resultTntent);
+                finish();
+            }
+        });
+
+
     }
 }
