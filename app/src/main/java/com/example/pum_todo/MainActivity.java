@@ -1,7 +1,9 @@
 package com.example.pum_todo;
 
-import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,29 +14,21 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
-
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
     private DBHelper dbHelper;
     private FloatingActionButton addTodoBtn;
-
-    List<String> titles;
-    List<String> subtitles;
+    ArrayList<TodoItem> todoItems;
     Adapter adapter;
-
     private static final int TODO_ACTIVITY_REQUEST_CODE = 1;
-
     RecyclerView recyclerView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +36,11 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-//        dbHelper = new DBHelper(this);
+
+        recyclerView = findViewById(R.id.recycler_view);
+
+        dbHelper = new DBHelper(this);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         initRecyclerView();
 
@@ -65,36 +63,47 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == TODO_ACTIVITY_REQUEST_CODE) {
+        if (requestCode == TODO_ACTIVITY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(this));
-                Adapter adapter = new Adapter(titles, subtitles);
+                Adapter adapter = new Adapter(todoItems);
                 recyclerView.setAdapter(adapter);
-                int duration = Toast.LENGTH_SHORT;
+
                 String title = data.getStringExtra("title");
+                String note = data.getStringExtra("note");
                 String date = data.getStringExtra("date");
-                titles.add(title);
-                subtitles.add(date);
+
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+                ContentValues values = new ContentValues();
+                values.put(Todo.TodoEntry.COLUMN_TODO_TITLE, title);
+                values.put(Todo.TodoEntry.COLUMN_TODO_DESC, note);
+                values.put(Todo.TodoEntry.COLUMN_TODO_DUE_DATE, date);
+                values.put(Todo.TodoEntry.COLUMN_TODO_DONE, false);
+
+                db.insert(Todo.TodoEntry.TABLE_TODO, null, values);
+
+                getTodoItems();
+                adapter.setTodoItems(todoItems);
                 adapter.notifyDataSetChanged();
-                CharSequence text = (CharSequence) "Dodano nowe zadanie";
-                Toast toast = Toast.makeText(MainActivity.this, text, duration);
-                toast.show();
-            }
-            else if (resultCode == RESULT_CANCELED) {
-                int duration = Toast.LENGTH_SHORT;
-                CharSequence text = (CharSequence) "Blad";
-                Toast toast = Toast.makeText(MainActivity.this, text, duration);
-                toast.show();
+
+                CharSequence text = "Dodano nowe zadanie";
+                showToast(text, Toast.LENGTH_SHORT);
+            } else if (resultCode == RESULT_CANCELED) {
+                CharSequence text = "Blad";
+                showToast(text, Toast.LENGTH_SHORT);
             }
         }
     }
 
+    private void showToast(CharSequence text, int duration) {
+        Toast.makeText(MainActivity.this, text, duration).show();
+    }
+
     private void initRecyclerView() {
-        recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        titles = new ArrayList<>();
-        subtitles = new ArrayList<>();
-        adapter = new Adapter(titles, subtitles);
+        getTodoItems();
+        adapter = new Adapter(todoItems);
         recyclerView.setAdapter(adapter);
 
         SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(adapter);
@@ -102,6 +111,31 @@ public class MainActivity extends AppCompatActivity {
         itemTouchHelper.attachToRecyclerView(recyclerView);
         adapter.notifyDataSetChanged();
     }
+
+    private void getTodoItems() {
+        todoItems = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String[] todoList = {
+                Todo.TodoEntry._ID,
+                Todo.TodoEntry.COLUMN_TODO_TITLE,
+                Todo.TodoEntry.COLUMN_TODO_DESC,
+                Todo.TodoEntry.COLUMN_TODO_DONE
+        };
+
+        Cursor cursor = db.query(Todo.TodoEntry.TABLE_TODO, todoList, null, null, null, null, null);
+
+        while (cursor.moveToNext()) {
+            String id = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry._ID));
+            String title = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry.COLUMN_TODO_TITLE));
+            String desc = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry.COLUMN_TODO_DESC));
+            String done = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry.COLUMN_TODO_DONE));
+
+            TodoItem item = new TodoItem(id, title, desc, done);
+            todoItems.add(item);
+        }
+        cursor.close();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -118,4 +152,9 @@ public class MainActivity extends AppCompatActivity {
         return super.onSupportNavigateUp();
     }
 
+    @Override
+    protected void onDestroy() {
+        dbHelper.close();
+        super.onDestroy();
+    }
 }

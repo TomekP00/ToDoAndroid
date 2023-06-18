@@ -1,26 +1,26 @@
 package com.example.pum_todo;
 
-import static androidx.recyclerview.widget.ItemTouchHelper.Callback.makeMovementFlags;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textview.MaterialTextView;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
-    private List<String> titles;
-    private List<String> subtitles;
+    private ArrayList<TodoItem> todoItems;
 
-    public Adapter(List<String> titles, List<String> subtitles) {
-        this.titles = titles;
-        this.subtitles = subtitles;
+    public Adapter(ArrayList<TodoItem> items) {
+        this.todoItems = items;
+    }
+
+    public void setTodoItems(ArrayList<TodoItem> items) {
+        todoItems = items;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -31,26 +31,21 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String title = titles.get(position);
-        String subtitle = subtitles.get(position);
-
-        holder.titleTextView.setText(title);
-        holder.subtitleTextView.setText(subtitle);
+        TodoItem todoItem = todoItems.get(position);
+        holder.titleTextView.setText(todoItem.getTitle());
     }
 
     @Override
     public int getItemCount() {
-        return titles.size();
+        return todoItems.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public MaterialTextView titleTextView;
-        public MaterialTextView subtitleTextView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.titleTextView);
-            subtitleTextView = itemView.findViewById(R.id.subtitleTextView);
         }
     }
 
@@ -79,17 +74,15 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder>{
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
             int position = viewHolder.getAdapterPosition();
-            titles.remove(position);
-            subtitles.remove(position);
+            todoItems.remove(position);
             notifyItemRemoved(position);
         }
     }
 
     public void deleteItem(int position) {
-        titles.remove(position);
-        subtitles.remove(position);
+        todoItems.remove(position);
         notifyItemRemoved(position);
-        notifyItemRangeChanged(position, titles.size());
+        notifyItemRangeChanged(position, todoItems.size());
     }
 
 }

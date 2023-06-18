@@ -7,10 +7,10 @@ public final class Todo {
     }
 
     public static class TodoEntry implements BaseColumns {
-        public static final String TABLE_NAME = "Todo";
-        public static final String COLUMN_NAME_TITLE = "title";
-        public static final String COLUMN_NAME_DESC = "description";
-        public static final String COLUMN_NAME_DONE = "done";
+        public static final String TABLE_TODO = "Todo";
+        public static final String COLUMN_TODO_TITLE = "title";
+        public static final String COLUMN_TODO_DESC = "description";
+        public static final String COLUMN_TODO_DUE_DATE = "due_date";
+        public static final String COLUMN_TODO_DONE = "done";
     }
-
 }
