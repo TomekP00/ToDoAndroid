@@ -1,13 +1,16 @@
 package com.example.pum_todo;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,11 +20,11 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
@@ -31,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     Adapter adapter;
     private static final int TODO_ACTIVITY_REQUEST_CODE = 1;
     RecyclerView recyclerView;
+    NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,25 +45,48 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         recyclerView = findViewById(R.id.recycler_view);
+        navigationView = findViewById(R.id.navigationView);
 
         dbHelper = new DBHelper(this);
 
         initRecyclerView();
-        getCategoryItems();
-
-        NavigationView navigationView = findViewById(R.id.navigationView);
-        Menu menu = navigationView.getMenu();
-
-        for (CategoryItem category : categoryItems) {
-            MenuItem menuItem = menu.add(Menu.NONE, Integer.parseInt(category.getId()), Menu.NONE, category.getName());
-            menuItem.setCheckable(true);
-        }
+        loadCategoryToMenu();
 
         addTodoBtn = findViewById(R.id.floatingActionButton);
         addTodoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 openTodoActivity();
+            }
+        });
+
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+
+                if (id == R.id.addCategory) {
+                    MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
+                    builder.setTitle("Dodaj nową kategorię");
+
+                    final EditText inputEditText = new EditText(MainActivity.this);
+                    inputEditText.setInputType(InputType.TYPE_CLASS_TEXT);
+                    builder.setView(inputEditText);
+
+                    builder.setPositiveButton("Dodaj", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String inputValue = inputEditText.getText().toString().trim();
+                            addCategory(inputValue);
+                        }
+                    });
+                    builder.setNegativeButton("Anuluj", null);
+                    builder.show();
+                    return true;
+                } else {
+                    showToast("id: " + id, Toast.LENGTH_SHORT);
+                    return false;
+                }
             }
         });
     }
@@ -146,6 +173,17 @@ public class MainActivity extends AppCompatActivity {
         cursor.close();
     }
 
+    private void loadCategoryToMenu() {
+        getCategoryItems();
+
+        Menu menu = navigationView.getMenu();
+
+        for (CategoryItem category : categoryItems) {
+            MenuItem menuItem = menu.add(Menu.NONE, Integer.parseInt(category.getId()), Menu.NONE, category.getName());
+            menuItem.setCheckable(true);
+        }
+    }
+
     private void getCategoryItems() {
         categoryItems = new ArrayList<CategoryItem>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -164,6 +202,15 @@ public class MainActivity extends AppCompatActivity {
             categoryItems.add(item);
         }
         cursor.close();
+    }
+
+    private void addCategory(String categoryName) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(Category.CategoryEntry.COLUMN_CATEGORY_NAME, categoryName);
+        db.insert(Category.CategoryEntry.TABLE_CATEGORY, null, values);
+        loadCategoryToMenu();
     }
 
     @Override
