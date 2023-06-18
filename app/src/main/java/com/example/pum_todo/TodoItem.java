@@ -32,5 +32,4 @@ public class TodoItem {
     public void setDone(String done) {
         this.done = done;
     }
-
 }

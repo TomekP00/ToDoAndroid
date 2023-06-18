@@ -18,13 +18,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
     private FloatingActionButton addTodoBtn;
     ArrayList<TodoItem> todoItems;
+    ArrayList<CategoryItem> categoryItems;
     Adapter adapter;
     private static final int TODO_ACTIVITY_REQUEST_CODE = 1;
     RecyclerView recyclerView;
@@ -40,9 +43,17 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view);
 
         dbHelper = new DBHelper(this);
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         initRecyclerView();
+        getCategoryItems();
+
+        NavigationView navigationView = findViewById(R.id.navigationView);
+        Menu menu = navigationView.getMenu();
+
+        for (CategoryItem category : categoryItems) {
+            MenuItem menuItem = menu.add(Menu.NONE, Integer.parseInt(category.getId()), Menu.NONE, category.getName());
+            menuItem.setCheckable(true);
+        }
 
         addTodoBtn = findViewById(R.id.floatingActionButton);
         addTodoBtn.setOnClickListener(new View.OnClickListener() {
@@ -51,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
                 openTodoActivity();
             }
         });
-
     }
 
     private void openTodoActivity() {
@@ -132,6 +142,26 @@ public class MainActivity extends AppCompatActivity {
 
             TodoItem item = new TodoItem(id, title, desc, done);
             todoItems.add(item);
+        }
+        cursor.close();
+    }
+
+    private void getCategoryItems() {
+        categoryItems = new ArrayList<CategoryItem>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String[] categoryList = {
+                Category.CategoryEntry._ID,
+                Category.CategoryEntry.COLUMN_CATEGORY_NAME
+        };
+
+        Cursor cursor = db.query(Category.CategoryEntry.TABLE_CATEGORY, categoryList, null, null, null, null, null);
+
+        while (cursor.moveToNext()) {
+            String id = cursor.getString(cursor.getColumnIndexOrThrow(Category.CategoryEntry._ID));
+            String name = cursor.getString(cursor.getColumnIndexOrThrow(Category.CategoryEntry.COLUMN_CATEGORY_NAME));
+
+            CategoryItem item = new CategoryItem(id, name);
+            categoryItems.add(item);
         }
         cursor.close();
     }
