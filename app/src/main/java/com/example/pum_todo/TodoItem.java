@@ -4,9 +4,9 @@ public class TodoItem {
     private String id;
     private String title;
     private String description;
-    private String done;
+    private int done;
 
-    public TodoItem(String id, String title, String description, String done) {
+    public TodoItem(String id, String title, String description, int done) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -25,11 +25,11 @@ public class TodoItem {
         return description;
     }
 
-    public String isDone() {
+    public int isDone() {
         return done;
     }
 
-    public void setDone(String done) {
+    public void setDone(int done) {
         this.done = done;
     }
 }

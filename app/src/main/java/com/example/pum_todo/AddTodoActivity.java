@@ -1,8 +1,12 @@
 package com.example.pum_todo;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -15,10 +19,12 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 public class AddTodoActivity extends AppCompatActivity {
+    private DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +40,27 @@ public class AddTodoActivity extends AppCompatActivity {
             getSupportActionBar().setTitle("Dodaj zadanie");
         }
 
-        EditText title = findViewById(R.id.title); //Tytul
-        EditText note = findViewById(R.id.note); //Opis
+        EditText title = findViewById(R.id.title);
+        EditText note = findViewById(R.id.note);
         Button button = findViewById(R.id.button);
         TextInputLayout textFiledCalendar = findViewById(R.id.textField3);
+        AutoCompleteTextView autoCompleteTextView = findViewById(R.id.autoCompleteTextView);
+
+        dbHelper = new DBHelper(this);
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.query(Category.CategoryEntry.TABLE_CATEGORY, null, null, null, null, null, null);
+        ArrayList<String> categories = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            String categoryName = cursor.getString(cursor.getColumnIndexOrThrow(Category.CategoryEntry.COLUMN_CATEGORY_NAME));
+            categories.add(categoryName);
+        }
+
+        cursor.close();
+        dbHelper.close();
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, categories);
+        autoCompleteTextView.setAdapter(adapter);
 
         textFiledCalendar.setEndIconOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,6 +100,5 @@ public class AddTodoActivity extends AppCompatActivity {
 
             }
         });
-
     }
 }

@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 3;// If you change the database schema, you must increment the database version.
+    public static final int DATABASE_VERSION = 6;// If you change the database schema, you must increment the database version.
     public static final String DATABASE_NAME = "Database.db";
     private static final String SQL_CREATE_ENTRIES_TODO =
             "CREATE TABLE " + Todo.TodoEntry.TABLE_TODO + " (" +
@@ -15,8 +15,11 @@ public class DBHelper extends SQLiteOpenHelper {
                     Todo.TodoEntry.COLUMN_TODO_TITLE + " TEXT," +
                     Todo.TodoEntry.COLUMN_TODO_DESC + " TEXT," +
                     Todo.TodoEntry.COLUMN_TODO_DUE_DATE + " TEXT," +
-                    Todo.TodoEntry.COLUMN_TODO_DONE + " BOOLEAN," +
-                    "FOREIGN KEY (" + Todo.TodoEntry._ID + ") REFERENCES " + Category.CategoryEntry.TABLE_CATEGORY + "(" + Category.CategoryEntry._ID + ")" +
+                    Todo.TodoEntry.COLUMN_TODO_DONE + " INTEGER," +
+                    Todo.TodoEntry.COLUMN_TODO_CREATED_AT + " TEXT," +
+                    Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " INTEGER," +
+                    "FOREIGN KEY (" + Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + ") REFERENCES " +
+                    Category.CategoryEntry.TABLE_CATEGORY + "(" + Category.CategoryEntry._ID + ")" +
                     ")";
 
     private static final String SQL_DELETE_ENTRIES_TODO =

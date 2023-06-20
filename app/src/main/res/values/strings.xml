@@ -5,4 +5,5 @@
     <string name="todoTitleHint">Tytuł</string>
     <string name="todoTitleNote">Notatka</string>
     <string name="todoTitleDate">Data</string>
+    <string name="categoryName">Kategoria</string>
 </resources>

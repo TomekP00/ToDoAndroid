@@ -24,6 +24,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -102,9 +103,9 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == TODO_ACTIVITY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                recyclerView.setLayoutManager(new LinearLayoutManager(this));
-                Adapter adapter = new Adapter(todoItems);
-                recyclerView.setAdapter(adapter);
+                /* recyclerView.setLayoutManager(new LinearLayoutManager(this));
+                Adapter adapter = new Adapter(todoItems, dbHelper.getWritableDatabase());
+                recyclerView.setAdapter(adapter);*/
 
                 String title = data.getStringExtra("title");
                 String note = data.getStringExtra("note");
@@ -116,7 +117,9 @@ public class MainActivity extends AppCompatActivity {
                 values.put(Todo.TodoEntry.COLUMN_TODO_TITLE, title);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DESC, note);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DUE_DATE, date);
-                values.put(Todo.TodoEntry.COLUMN_TODO_DONE, false);
+                values.put(Todo.TodoEntry.COLUMN_TODO_DONE, 0);
+                values.put(Todo.TodoEntry.COLUMN_TODO_CREATED_AT, LocalDateTime.now().toString());
+                values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, 1);
 
                 db.insert(Todo.TodoEntry.TABLE_TODO, null, values);
 
@@ -140,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     private void initRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         getTodoItems();
-        adapter = new Adapter(todoItems);
+        adapter = new Adapter(todoItems, dbHelper.getWritableDatabase());
         recyclerView.setAdapter(adapter);
 
         SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(adapter);
@@ -165,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
             String id = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry._ID));
             String title = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry.COLUMN_TODO_TITLE));
             String desc = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry.COLUMN_TODO_DESC));
-            String done = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry.COLUMN_TODO_DONE));
+            int done = cursor.getInt(cursor.getColumnIndexOrThrow(Todo.TodoEntry.COLUMN_TODO_DONE));
 
             TodoItem item = new TodoItem(id, title, desc, done);
             todoItems.add(item);
