@@ -24,6 +24,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -117,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
                 values.put(Todo.TodoEntry.COLUMN_TODO_DESC, note);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DUE_DATE, date);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DONE, 0);
+                values.put(Todo.TodoEntry.COLUMN_TODO_CREATED_AT, LocalDateTime.now().toString());
+                values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, 1);
 
                 db.insert(Todo.TodoEntry.TABLE_TODO, null, values);
 

@@ -117,5 +117,4 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, todoItems.size());
     }
-
 }
