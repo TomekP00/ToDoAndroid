@@ -41,8 +41,8 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
         TodoItem todoItem = todoItems.get(position);
         holder.titleTextView.setText(todoItem.getTitle());
 
-        if (todoItem.isDone() == 0)
-            holder.titleTextView.setTextColor(Color.RED);
+        if (todoItem.isDone() == 1)
+            holder.titleTextView.setTextColor(Color.GREEN);
         else
             holder.titleTextView.setTextColor(Color.BLACK);
 
@@ -50,9 +50,6 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
             @Override
             public void onClick(View view) {
                 int isDone = todoItem.isDone() == 0 ? 1 : 0;
-
-                DBHelper dbHelper = new DBHelper(view.getContext());
-                SQLiteDatabase db = dbHelper.getWritableDatabase();
 
                 ContentValues values = new ContentValues();
                 values.put(Todo.TodoEntry.COLUMN_TODO_DONE, isDone);
