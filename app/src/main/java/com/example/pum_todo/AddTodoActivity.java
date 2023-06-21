@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -27,6 +28,7 @@ import java.util.Locale;
 
 public class AddTodoActivity extends AppCompatActivity {
     private DBHelper dbHelper;
+    private String categoryId = "1";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,18 +54,28 @@ public class AddTodoActivity extends AppCompatActivity {
         dbHelper = new DBHelper(this);
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor = db.query(Category.CategoryEntry.TABLE_CATEGORY, null, null, null, null, null, null);
-        ArrayList<String> categories = new ArrayList<>();
+        ArrayList<CategoryItem> categories = new ArrayList<CategoryItem>();
 
         while (cursor.moveToNext()) {
             String categoryName = cursor.getString(cursor.getColumnIndexOrThrow(Category.CategoryEntry.COLUMN_CATEGORY_NAME));
-            categories.add(categoryName);
+            int categoryID = cursor.getInt(cursor.getColumnIndexOrThrow(Category.CategoryEntry._ID));
+
+            CategoryItem item = new CategoryItem(categoryID, categoryName);
+            categories.add(item);
         }
 
         cursor.close();
         dbHelper.close();
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, categories);
+        ArrayAdapter<CategoryItem> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, categories);
         autoCompleteTextView.setAdapter(adapter);
+        autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                CategoryItem selectedCategory = (CategoryItem) parent.getItemAtPosition(position);
+                categoryId = String.valueOf(selectedCategory.getId());
+            }
+        });
 
         textFiledCalendar.setEndIconOnClickListener(new View.OnClickListener() {
             @Override
@@ -115,15 +127,17 @@ public class AddTodoActivity extends AppCompatActivity {
                 Intent resultIntent = new Intent();
 
                 String correctTitle = title.getText().toString();
-                String correctNote = title.getText().toString();
+                String correctNote = note.getText().toString();
                 EditText editText = textFiledCalendar.getEditText();
+                EditText timeText = textFiledTime.getEditText();
                 String correctDate = editText.getText().toString();
-                String categoryID = autoCompleteTextView.getText().toString();
+                String correctTime = timeText.getText().toString();
 
                 resultIntent.putExtra("title", correctTitle);
                 resultIntent.putExtra("note", correctNote);
                 resultIntent.putExtra("date", correctDate);
-                resultIntent.putExtra("categoryID", categoryID);
+                resultIntent.putExtra("time", correctTime);
+                resultIntent.putExtra("categoryID", categoryId);
 
                 setResult(RESULT_OK, resultIntent);
                 finish();

@@ -1,19 +1,24 @@
 package com.example.pum_todo;
 
 public class CategoryItem {
-    private String id;
+    private int id;
     private String name;
 
-    public CategoryItem(String id, String name) {
+    public CategoryItem(int id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

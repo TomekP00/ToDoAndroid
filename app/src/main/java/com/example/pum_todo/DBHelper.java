@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 6;// If you change the database schema, you must increment the database version.
+    public static final int DATABASE_VERSION = 7;// If you change the database schema, you must increment the database version.
     public static final String DATABASE_NAME = "Database.db";
     private static final String SQL_CREATE_ENTRIES_TODO =
             "CREATE TABLE " + Todo.TodoEntry.TABLE_TODO + " (" +
@@ -15,6 +15,7 @@ public class DBHelper extends SQLiteOpenHelper {
                     Todo.TodoEntry.COLUMN_TODO_TITLE + " TEXT," +
                     Todo.TodoEntry.COLUMN_TODO_DESC + " TEXT," +
                     Todo.TodoEntry.COLUMN_TODO_DUE_DATE + " TEXT," +
+                    Todo.TodoEntry.COLUMN_TODO_DUE_TIME + " TEXT," +
                     Todo.TodoEntry.COLUMN_TODO_DONE + " INTEGER," +
                     Todo.TodoEntry.COLUMN_TODO_CREATED_AT + " TEXT," +
                     Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " INTEGER," +
