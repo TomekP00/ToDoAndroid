@@ -6,4 +6,5 @@
     <string name="todoTitleNote">Notatka</string>
     <string name="todoTitleDate">Data</string>
     <string name="categoryName">Kategoria</string>
+    <string name="todoTime">Time</string>
 </resources>

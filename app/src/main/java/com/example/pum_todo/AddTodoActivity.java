@@ -17,6 +17,8 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.datepicker.MaterialPickerOnPositiveButtonClickListener;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,6 +46,7 @@ public class AddTodoActivity extends AppCompatActivity {
         EditText note = findViewById(R.id.note);
         Button button = findViewById(R.id.button);
         TextInputLayout textFiledCalendar = findViewById(R.id.textField3);
+        TextInputLayout textFiledTime = findViewById(R.id.textField4);
         AutoCompleteTextView autoCompleteTextView = findViewById(R.id.autoCompleteTextView);
 
         dbHelper = new DBHelper(this);
@@ -65,7 +68,7 @@ public class AddTodoActivity extends AppCompatActivity {
         textFiledCalendar.setEndIconOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
+                MaterialDatePicker datePicker = MaterialDatePicker.Builder.datePicker()
                         .setTitleText("Wybierz date")
                         .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                         .build();
@@ -81,6 +84,31 @@ public class AddTodoActivity extends AppCompatActivity {
             }
         });
 
+        textFiledTime.setEndIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MaterialTimePicker timePicker = new MaterialTimePicker.Builder()
+                        .setTitleText("Wybierz datę")
+                        .setTimeFormat(TimeFormat.CLOCK_24H)
+                        .setHour(12)
+                        .setMinute(45)
+                        .setInputMode(MaterialTimePicker.INPUT_MODE_CLOCK)
+                        .build();
+                timePicker.addOnPositiveButtonClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int newHour = timePicker.getHour();
+                        int newMinute = timePicker.getMinute();
+
+                        String formattedTime = String.format(Locale.getDefault(), "%02d:%02d", newHour, newMinute);
+                        TextInputEditText editText = textFiledTime.findViewById(R.id.timeInput);
+                        editText.setText(formattedTime);
+                    }
+                });
+                timePicker.show(getSupportFragmentManager(), "tag");
+            }
+        });
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -90,10 +118,12 @@ public class AddTodoActivity extends AppCompatActivity {
                 String correctNote = title.getText().toString();
                 EditText editText = textFiledCalendar.getEditText();
                 String correctDate = editText.getText().toString();
+                String categoryID = autoCompleteTextView.getText().toString();
 
                 resultIntent.putExtra("title", correctTitle);
                 resultIntent.putExtra("note", correctNote);
                 resultIntent.putExtra("date", correctDate);
+                resultIntent.putExtra("categoryID", categoryID);
 
                 setResult(RESULT_OK, resultIntent);
                 finish();
