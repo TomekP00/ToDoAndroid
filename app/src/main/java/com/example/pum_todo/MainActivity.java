@@ -26,6 +26,7 @@ import com.google.android.material.navigation.NavigationView;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
@@ -110,6 +111,12 @@ public class MainActivity extends AppCompatActivity {
                 String title = data.getStringExtra("title");
                 String note = data.getStringExtra("note");
                 String date = data.getStringExtra("date");
+                String time = data.getStringExtra("time");
+                String categoryID = data.getStringExtra("categoryID");
+                String categoryIDCorrect = !Objects.equals(data.getStringExtra("categoryID"), "1") ? categoryID : "1";
+                LocalDateTime now = LocalDateTime.now();
+
+                showToast(categoryIDCorrect, Toast.LENGTH_SHORT);
 
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -117,9 +124,10 @@ public class MainActivity extends AppCompatActivity {
                 values.put(Todo.TodoEntry.COLUMN_TODO_TITLE, title);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DESC, note);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DUE_DATE, date);
+                values.put(Todo.TodoEntry.COLUMN_TODO_DUE_TIME, time);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DONE, 0);
-                values.put(Todo.TodoEntry.COLUMN_TODO_CREATED_AT, LocalDateTime.now().toString());
-                values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, 1);
+                values.put(Todo.TodoEntry.COLUMN_TODO_CREATED_AT, now.toString());
+                values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, categoryIDCorrect);
 
                 db.insert(Todo.TodoEntry.TABLE_TODO, null, values);
 
@@ -128,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
 
                 CharSequence text = "Dodano nowe zadanie";
-                showToast(text, Toast.LENGTH_SHORT);
+//                showToast(text, Toast.LENGTH_SHORT);
             } else if (resultCode == RESULT_CANCELED) {
                 CharSequence text = "Blad";
                 showToast(text, Toast.LENGTH_SHORT);
@@ -180,9 +188,13 @@ public class MainActivity extends AppCompatActivity {
         getCategoryItems();
 
         Menu menu = navigationView.getMenu();
+        menu.clear();
+
+        MenuItem addCategoryItem = menu.add(Menu.NONE, R.id.addCategory, Menu.NONE, "Dodaj kategorię");
+        addCategoryItem.setCheckable(true);
 
         for (CategoryItem category : categoryItems) {
-            MenuItem menuItem = menu.add(Menu.NONE, Integer.parseInt(category.getId()), Menu.NONE, category.getName());
+            MenuItem menuItem = menu.add(Menu.NONE, category.getId(), Menu.NONE, category.getName());
             menuItem.setCheckable(true);
         }
     }
@@ -198,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         Cursor cursor = db.query(Category.CategoryEntry.TABLE_CATEGORY, categoryList, null, null, null, null, null);
 
         while (cursor.moveToNext()) {
-            String id = cursor.getString(cursor.getColumnIndexOrThrow(Category.CategoryEntry._ID));
+            int id = cursor.getInt(cursor.getColumnIndexOrThrow(Category.CategoryEntry._ID));
             String name = cursor.getString(cursor.getColumnIndexOrThrow(Category.CategoryEntry.COLUMN_CATEGORY_NAME));
 
             CategoryItem item = new CategoryItem(id, name);
