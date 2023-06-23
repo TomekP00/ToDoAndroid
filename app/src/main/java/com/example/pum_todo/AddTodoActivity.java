@@ -67,6 +67,12 @@ public class AddTodoActivity extends AppCompatActivity {
         cursor.close();
         dbHelper.close();
 
+        if (categories.size() > 0) {
+            CategoryItem defaultCategory = categories.get(0);
+            autoCompleteTextView.setText(defaultCategory.getName());
+            categoryId = String.valueOf(defaultCategory.getId());
+        }
+
         ArrayAdapter<CategoryItem> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, categories);
         autoCompleteTextView.setAdapter(adapter);
         autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

@@ -19,10 +19,12 @@ import java.util.ArrayList;
 public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
     private ArrayList<TodoItem> todoItems;
     private SQLiteDatabase db;
+    private MainActivity mainActivity;
 
-    public Adapter(ArrayList<TodoItem> items, SQLiteDatabase db) {
+    public Adapter(ArrayList<TodoItem> items, SQLiteDatabase db, MainActivity mainActivity) {
         this.todoItems = items;
         this.db = db;
+        this.mainActivity = mainActivity;
     }
 
     public void setTodoItems(ArrayList<TodoItem> items) {
@@ -60,6 +62,8 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
                 db.update(Todo.TodoEntry.TABLE_TODO, values, selection, selectionArgs);
 
                 todoItem.setDone(isDone);
+                mainActivity.getTodoItems();
+                setTodoItems(mainActivity.todoItems);
                 notifyDataSetChanged();
             }
         });

@@ -5,12 +5,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,12 +25,15 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
     private static final int TODO_ACTIVITY_REQUEST_CODE = 1;
     RecyclerView recyclerView;
     NavigationView navigationView;
+    TextView textViewCategory;
+    ChipGroup chipGroup;
+    private int chooseCategoryID = 1;
+    private int selectedTaskState = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +60,10 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recycler_view);
         navigationView = findViewById(R.id.navigationView);
+        textViewCategory = findViewById(R.id.textViewCategory);
+        chipGroup = findViewById(R.id.chipGroup);
+
+        textViewCategory.setText("Domyślna");
 
         dbHelper = new DBHelper(this);
 
@@ -84,13 +100,56 @@ public class MainActivity extends AppCompatActivity {
                     });
                     builder.setNegativeButton("Anuluj", null);
                     builder.show();
-                    return true;
-                } else {
-                    showToast("id: " + id, Toast.LENGTH_SHORT);
                     return false;
+                } else {
+                    chooseCategoryID = id;
+                    getTodoItems();
+                    textViewCategory.setText(item.getTitle());
+                    adapter.setTodoItems(todoItems);
+                    adapter.notifyDataSetChanged();
+                    return true;
                 }
             }
         });
+
+        findViewById(R.id.chipDone).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                selectedTaskState = 1;
+                getTodoItems();
+                adapter.setTodoItems(todoItems);
+                adapter.notifyDataSetChanged();
+            }
+        });
+
+        findViewById(R.id.chipUndone).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                selectedTaskState = 0;
+                getTodoItems();
+                adapter.setTodoItems(todoItems);
+                adapter.notifyDataSetChanged();
+            }
+        });
+        /*chipGroup.setOnCheckedStateChangeListener(new ChipGroup.OnCheckedStateChangeListener() {
+            @Override
+            public void onCheckedChanged(@NonNull ChipGroup group, @NonNull List<Integer> checkedIds) {
+                for (int checkedId : checkedIds) {
+                    Chip chip = group.findViewById(checkedId);
+                    if (chip.getId() == R.id.chipUndone) {
+                        selectedTaskState = 0;
+                    } else if (chip.getId() == R.id.chipDone) {
+                        selectedTaskState = 1;
+                    } else {
+                        selectedTaskState = 2;
+                    }
+
+                    getTodoItems(chooseCategoryID);
+                    adapter.setTodoItems(todoItems);
+                    adapter.notifyDataSetChanged();
+                }
+            }
+        });*/
     }
 
     private void openTodoActivity() {
@@ -104,10 +163,6 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == TODO_ACTIVITY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                /* recyclerView.setLayoutManager(new LinearLayoutManager(this));
-                Adapter adapter = new Adapter(todoItems, dbHelper.getWritableDatabase());
-                recyclerView.setAdapter(adapter);*/
-
                 String title = data.getStringExtra("title");
                 String note = data.getStringExtra("note");
                 String date = data.getStringExtra("date");
@@ -136,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
 
                 CharSequence text = "Dodano nowe zadanie";
-//                showToast(text, Toast.LENGTH_SHORT);
+                showToast(text, Toast.LENGTH_SHORT);
             } else if (resultCode == RESULT_CANCELED) {
                 CharSequence text = "Blad";
                 showToast(text, Toast.LENGTH_SHORT);
@@ -151,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
     private void initRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         getTodoItems();
-        adapter = new Adapter(todoItems, dbHelper.getWritableDatabase());
+        adapter = new Adapter(todoItems, dbHelper.getWritableDatabase(), this);
         recyclerView.setAdapter(adapter);
 
         SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(adapter);
@@ -160,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
-    private void getTodoItems() {
+    public void getTodoItems() {
         todoItems = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String[] todoList = {
@@ -170,7 +225,13 @@ public class MainActivity extends AppCompatActivity {
                 Todo.TodoEntry.COLUMN_TODO_DONE
         };
 
-        Cursor cursor = db.query(Todo.TodoEntry.TABLE_TODO, todoList, null, null, null, null, null);
+        Cursor cursor = db.query(Todo.TodoEntry.TABLE_TODO, todoList,
+                Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " = ? AND " +
+                Todo.TodoEntry.COLUMN_TODO_DONE + " = ?",
+                new String[]{String.valueOf(chooseCategoryID), String.valueOf(selectedTaskState)},
+                null,
+                null,
+                null);
 
         while (cursor.moveToNext()) {
             String id = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry._ID));

@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 7;// If you change the database schema, you must increment the database version.
+    public static final int DATABASE_VERSION = 9;// If you change the database schema, you must increment the database version.
     public static final String DATABASE_NAME = "Database.db";
     private static final String SQL_CREATE_ENTRIES_TODO =
             "CREATE TABLE " + Todo.TodoEntry.TABLE_TODO + " (" +
@@ -43,7 +43,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_ENTRIES_TODO);
 
         ContentValues values = new ContentValues();
-        values.put(Category.CategoryEntry.COLUMN_CATEGORY_NAME, "Wszystko");
+        values.put(Category.CategoryEntry.COLUMN_CATEGORY_NAME, "Domyślna");
         db.insert(Category.CategoryEntry.TABLE_CATEGORY, null, values);
     }
 
