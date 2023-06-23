@@ -7,4 +7,6 @@
     <string name="todoTitleDate">Data</string>
     <string name="categoryName">Kategoria</string>
     <string name="todoTime">Time</string>
+    <string name="ChipDone">Ukończone</string>
+    <string name="ChipUndone">Nie ukończone</string>
 </resources>
