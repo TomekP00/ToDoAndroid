@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                 adapter.setTodoItems(todoItems);
                 adapter.notifyDataSetChanged();
 
-                if (date != null && time != null) {
+                /*if (date != null && time != null) {
 
                     Intent intent = new Intent(MainActivity.this, ReminderBroadcast.class);
                     PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
@@ -222,9 +222,10 @@ public class MainActivity extends AppCompatActivity {
 
                     AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
                     alarmManager.set(AlarmManager.RTC_WAKEUP, timeatAdd + tens, pendingIntent);
-                }
+                }*/
 
                 CharSequence text = "Dodano nowe zadanie";
+                showToast(text, Toast.LENGTH_SHORT);
             } else if (resultCode == RESULT_CANCELED) {
                 CharSequence text = "Blad";
                 showToast(text, Toast.LENGTH_SHORT);

@@ -27,7 +27,6 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".ReminderBroadcast"/>
     </application>
 
 </manifest>
