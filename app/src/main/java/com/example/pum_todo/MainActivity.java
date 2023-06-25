@@ -1,11 +1,17 @@
 package com.example.pum_todo;
 
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.Spannable;
@@ -21,6 +27,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,6 +41,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -47,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     NavigationView navigationView;
     TextView textViewCategory;
     ChipGroup chipGroup;
-    private int chooseCategoryID = 1;
+    private int chooseCategoryID = 0;
     private int selectedTaskState = 0;
 
     @Override
@@ -62,26 +73,48 @@ public class MainActivity extends AppCompatActivity {
         navigationView = findViewById(R.id.navigationView);
         textViewCategory = findViewById(R.id.textViewCategory);
         chipGroup = findViewById(R.id.chipGroup);
+        addTodoBtn = findViewById(R.id.floatingActionButton);
 
         textViewCategory.setText("Domyślna");
+
+        createNotificationChannel();
 
         dbHelper = new DBHelper(this);
 
         initRecyclerView();
         loadCategoryToMenu();
 
-        addTodoBtn = findViewById(R.id.floatingActionButton);
         addTodoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 openTodoActivity();
             }
         });
-
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
+
+                findViewById(item.getItemId()).setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View view) {
+                        if (id == R.id.addCategory || id == R.id.allCategory || id == 1)
+                            return false;
+
+                        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
+                        builder.setTitle("Czy na pewno chcesz usunąć tą kategorię");
+
+                        builder.setPositiveButton("Tak", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                removeCategory(item.getItemId());
+                            }
+                        });
+                        builder.setNegativeButton("Nie", null);
+                        builder.show();
+                        return true;
+                    }
+                });
 
                 if (id == R.id.addCategory) {
                     MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(MainActivity.this);
@@ -101,6 +134,13 @@ public class MainActivity extends AppCompatActivity {
                     builder.setNegativeButton("Anuluj", null);
                     builder.show();
                     return false;
+                } else if (id == R.id.allCategory) {
+                    chooseCategoryID = 0;
+                    getTodoItems();
+                    textViewCategory.setText(item.getTitle());
+                    adapter.setTodoItems(todoItems);
+                    adapter.notifyDataSetChanged();
+                    return true;
                 } else {
                     chooseCategoryID = id;
                     getTodoItems();
@@ -111,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
         findViewById(R.id.chipDone).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -121,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
             }
         });
-
         findViewById(R.id.chipUndone).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -131,25 +169,6 @@ public class MainActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
             }
         });
-        /*chipGroup.setOnCheckedStateChangeListener(new ChipGroup.OnCheckedStateChangeListener() {
-            @Override
-            public void onCheckedChanged(@NonNull ChipGroup group, @NonNull List<Integer> checkedIds) {
-                for (int checkedId : checkedIds) {
-                    Chip chip = group.findViewById(checkedId);
-                    if (chip.getId() == R.id.chipUndone) {
-                        selectedTaskState = 0;
-                    } else if (chip.getId() == R.id.chipDone) {
-                        selectedTaskState = 1;
-                    } else {
-                        selectedTaskState = 2;
-                    }
-
-                    getTodoItems(chooseCategoryID);
-                    adapter.setTodoItems(todoItems);
-                    adapter.notifyDataSetChanged();
-                }
-            }
-        });*/
     }
 
     private void openTodoActivity() {
@@ -178,8 +197,8 @@ public class MainActivity extends AppCompatActivity {
                 ContentValues values = new ContentValues();
                 values.put(Todo.TodoEntry.COLUMN_TODO_TITLE, title);
                 values.put(Todo.TodoEntry.COLUMN_TODO_DESC, note);
-                values.put(Todo.TodoEntry.COLUMN_TODO_DUE_DATE, date);
-                values.put(Todo.TodoEntry.COLUMN_TODO_DUE_TIME, time);
+                values.put(Todo.TodoEntry.COLUMN_TODO_DUE_DATE, date);//dd-MM-yyyy
+                values.put(Todo.TodoEntry.COLUMN_TODO_DUE_TIME, time);//HH:mm
                 values.put(Todo.TodoEntry.COLUMN_TODO_DONE, 0);
                 values.put(Todo.TodoEntry.COLUMN_TODO_CREATED_AT, now.toString());
                 values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, categoryIDCorrect);
@@ -190,8 +209,22 @@ public class MainActivity extends AppCompatActivity {
                 adapter.setTodoItems(todoItems);
                 adapter.notifyDataSetChanged();
 
+                if (date != null && time != null) {
+
+                    Intent intent = new Intent(MainActivity.this, ReminderBroadcast.class);
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+                    LocalDateTime dateTime = LocalDateTime.parse(date + " " + time, formatter);
+
+                    long timeatAdd = System.currentTimeMillis();
+                    long tens = 1000 * 10;
+
+                    AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, timeatAdd + tens, pendingIntent);
+                }
+
                 CharSequence text = "Dodano nowe zadanie";
-                showToast(text, Toast.LENGTH_SHORT);
             } else if (resultCode == RESULT_CANCELED) {
                 CharSequence text = "Blad";
                 showToast(text, Toast.LENGTH_SHORT);
@@ -225,13 +258,23 @@ public class MainActivity extends AppCompatActivity {
                 Todo.TodoEntry.COLUMN_TODO_DONE
         };
 
-        Cursor cursor = db.query(Todo.TodoEntry.TABLE_TODO, todoList,
-                Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " = ? AND " +
-                Todo.TodoEntry.COLUMN_TODO_DONE + " = ?",
-                new String[]{String.valueOf(chooseCategoryID), String.valueOf(selectedTaskState)},
-                null,
-                null,
-                null);
+        Cursor cursor;
+        if (chooseCategoryID == 0) {
+            cursor = db.query(Todo.TodoEntry.TABLE_TODO, todoList,
+                    Todo.TodoEntry.COLUMN_TODO_DONE + " = ?",
+                    new String[]{String.valueOf(selectedTaskState)},
+                    null,
+                    null,
+                    null);
+        } else {
+            cursor = db.query(Todo.TodoEntry.TABLE_TODO, todoList,
+                    Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " = ? AND " +
+                            Todo.TodoEntry.COLUMN_TODO_DONE + " = ?",
+                    new String[]{String.valueOf(chooseCategoryID), String.valueOf(selectedTaskState)},
+                    null,
+                    null,
+                    null);
+        }
 
         while (cursor.moveToNext()) {
             String id = cursor.getString(cursor.getColumnIndexOrThrow(Todo.TodoEntry._ID));
@@ -253,6 +296,8 @@ public class MainActivity extends AppCompatActivity {
 
         MenuItem addCategoryItem = menu.add(Menu.NONE, R.id.addCategory, Menu.NONE, "Dodaj kategorię");
         addCategoryItem.setCheckable(true);
+        MenuItem allCategoryItem = menu.add(Menu.NONE, R.id.allCategory, Menu.NONE, "Wszystko");
+        allCategoryItem.setCheckable(true);
 
         for (CategoryItem category : categoryItems) {
             MenuItem menuItem = menu.add(Menu.NONE, category.getId(), Menu.NONE, category.getName());
@@ -287,6 +332,62 @@ public class MainActivity extends AppCompatActivity {
         values.put(Category.CategoryEntry.COLUMN_CATEGORY_NAME, categoryName);
         db.insert(Category.CategoryEntry.TABLE_CATEGORY, null, values);
         loadCategoryToMenu();
+    }
+
+    private void removeCategory(int categoryID) {
+
+        boolean todosExist = checkIfTodosExistForCategory(categoryID);
+
+        if (todosExist) {
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, 1);
+            String selection = Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " = ?";
+            String[] selectionArgs = {String.valueOf(categoryID)};
+            db.update(Todo.TodoEntry.TABLE_TODO, values, selection, selectionArgs);
+        }
+
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String selection = Category.CategoryEntry._ID + " = ?";
+        String[] selectionArgs = {String.valueOf(categoryID)};
+        db.delete(Category.CategoryEntry.TABLE_CATEGORY, selection, selectionArgs);
+
+        loadCategoryToMenu();
+        getTodoItems();
+        adapter.setTodoItems(todoItems);
+        adapter.notifyDataSetChanged();
+    }
+
+    private boolean checkIfTodosExistForCategory(int categoryID) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String selection = Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " = ?";
+        String[] selectionArgs = {String.valueOf(categoryID)};
+        Cursor cursor = db.query(
+                Todo.TodoEntry.TABLE_TODO,
+                null,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+        boolean todosExist = cursor.moveToFirst();
+        cursor.close();
+        return todosExist;
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "LemubitReminderChannel";
+            String description = "Channel for Lemubit Reminder";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("notifyLemubit", name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+
+        }
     }
 
     @Override

@@ -8,4 +8,9 @@
         android:checkable="true"
         android:title="Dodaj kategorię" />
 
+    <item
+        android:id="@+id/allCategory"
+        android:checkable="true"
+        android:title="Wszystko" />
+
 </menu>
