@@ -44,12 +44,15 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton addTodoBtn;
     ArrayList<TodoItem> todoItems;
     ArrayList<CategoryItem> categoryItems;
-    Adapter adapter;
+    static Adapter adapter;
     private static final int TODO_ACTIVITY_REQUEST_CODE = 1;
+    private static final int REQUEST_CODE_2 = 2;
+    private static final int REQUEST_CODE_3 = 3;
     RecyclerView recyclerView;
     NavigationView navigationView;
     TextView textViewCategory;
     ChipGroup chipGroup;
+    String IDitemID;
     private int chooseCategoryID = 0;
     private int selectedTaskState = 0;
 
@@ -169,6 +172,13 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, TODO_ACTIVITY_REQUEST_CODE);
     }
 
+    public void onItemClick(int itemID, int position) {
+        Intent intent = new Intent(MainActivity.this, AllInfo.class);
+        intent.putExtra("IDitemutest", String.valueOf(itemID));
+        intent.putExtra("position", position);
+        startActivityForResult(intent, REQUEST_CODE_2);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -206,9 +216,28 @@ public class MainActivity extends AppCompatActivity {
 
                 CharSequence text = "Dodano nowe zadanie";
                 showToast(text, Toast.LENGTH_SHORT);
-            } else if (resultCode == RESULT_CANCELED) {
-                CharSequence text = "Blad";
-                showToast(text, Toast.LENGTH_SHORT);
+            }
+        } else if (requestCode == REQUEST_CODE_2) {
+
+            if (resultCode == RESULT_OK) {
+                int position = data.getIntExtra("position", -1);
+                adapter.deleteItem(position);
+            } else if (resultCode == 420) {
+                String id = data.getStringExtra("IDitemu");
+                int position = data.getIntExtra("position", -1);
+
+
+                IDitemID = id;
+                Intent edit = new Intent(MainActivity.this, EditToDoItemActivity.class);
+                edit.putExtra("IDitemu", id);
+                edit.putExtra("position2", position);
+                startActivityForResult(edit, REQUEST_CODE_3);
+
+            }
+        } else if (requestCode == REQUEST_CODE_3) {
+            if (resultCode == 2115) {
+                getTodoItems();
+                initRecyclerView();
             }
         }
     }

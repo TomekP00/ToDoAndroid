@@ -1,11 +1,13 @@
 package com.example.pum_todo;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -20,6 +22,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
     private ArrayList<TodoItem> todoItems;
     private SQLiteDatabase db;
     private MainActivity mainActivity;
+    private AdapterView.OnItemClickListener onItemClickListener;
 
     public Adapter(ArrayList<TodoItem> items, SQLiteDatabase db, MainActivity mainActivity) {
         this.todoItems = items;
@@ -39,7 +42,7 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, @SuppressLint("RecyclerView") int position) {
         TodoItem todoItem = todoItems.get(position);
         holder.titleTextView.setText(todoItem.getTitle());
 
@@ -67,7 +70,15 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
                 notifyDataSetChanged();
             }
         });
+        holder.titleTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TodoItem clickedItem = todoItems.get(position);
+                int position = holder.getAdapterPosition();
+                mainActivity.onItemClick(Integer.valueOf(clickedItem.getId()), position);
 
+            }
+        });
     }
 
     @Override
@@ -120,5 +131,27 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
         todoItems.remove(position);
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, todoItems.size());
+    }
+
+    public void editItem(String id, String title, String desc, String date, String time, String categoryId, String isDone) {
+        ContentValues values = new ContentValues();
+        values.put(Todo.TodoEntry.COLUMN_TODO_TITLE, title);
+        values.put(Todo.TodoEntry.COLUMN_TODO_DESC, desc);
+        values.put(Todo.TodoEntry.COLUMN_TODO_DUE_DATE, date);
+        values.put(Todo.TodoEntry.COLUMN_TODO_DUE_TIME, time);
+        values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, categoryId);
+        values.put(Todo.TodoEntry.COLUMN_TODO_DONE, isDone);
+
+        String selection = Todo.TodoEntry._ID + " = ?";
+
+        db.update(Todo.TodoEntry.TABLE_TODO, values, selection, new String[]{id});
+        notifyDataSetChanged();
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.onItemClickListener = (AdapterView.OnItemClickListener) listener;
     }
 }
