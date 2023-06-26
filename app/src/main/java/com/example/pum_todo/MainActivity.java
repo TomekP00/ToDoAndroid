@@ -336,11 +336,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void removeCategory(int categoryID) {
-
         boolean todosExist = checkIfTodosExistForCategory(categoryID);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         if (todosExist) {
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put(Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID, 1);
             String selection = Todo.TodoEntry.COLUMN_TODO_CATEGORY_ID + " = ?";
@@ -348,7 +348,6 @@ public class MainActivity extends AppCompatActivity {
             db.update(Todo.TodoEntry.TABLE_TODO, values, selection, selectionArgs);
         }
 
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
         String selection = Category.CategoryEntry._ID + " = ?";
         String[] selectionArgs = {String.valueOf(categoryID)};
         db.delete(Category.CategoryEntry.TABLE_CATEGORY, selection, selectionArgs);
@@ -389,12 +388,6 @@ public class MainActivity extends AppCompatActivity {
             notificationManager.createNotificationChannel(channel);
 
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
     }
 
     @Override
