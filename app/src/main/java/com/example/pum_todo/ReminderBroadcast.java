@@ -12,17 +12,18 @@ import androidx.core.app.NotificationManagerCompat;
 public class ReminderBroadcast extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "notifyLemubit")
+        String title = intent.getStringExtra("title");
+        String text = intent.getStringExtra("text");
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "notifyPum")
                 .setSmallIcon(R.drawable.calendar)
-                .setContentTitle("Title")
-                .setContentText("Text")
+                .setContentTitle(title)
+                .setContentText(text)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
 
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             return;
-        }
         notificationManagerCompat.notify(200, builder.build());
     }
 }

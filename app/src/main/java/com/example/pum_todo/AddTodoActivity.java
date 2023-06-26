@@ -139,8 +139,12 @@ public class AddTodoActivity extends AppCompatActivity {
                 String correctDate = editText.getText().toString();
                 String correctTime = timeText.getText().toString();
 
-                if (correctTitle.isEmpty()  || correctDate.isEmpty() || correctTime.isEmpty()) {
+                if (correctTitle.isEmpty()) {
                     Toast.makeText(AddTodoActivity.this, "Uzupełnij pola", Toast.LENGTH_SHORT).show();
+                } else if (!correctDate.isEmpty() && correctTime.isEmpty()) {
+                    Toast.makeText(AddTodoActivity.this, "Uzupełnij czas", Toast.LENGTH_SHORT).show();
+                } else if (correctDate.isEmpty() && !correctTime.isEmpty()) {
+                    Toast.makeText(AddTodoActivity.this, "Uzupełnij date", Toast.LENGTH_SHORT).show();
                 } else {
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra("title", correctTitle);

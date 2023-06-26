@@ -7,16 +7,11 @@ import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.StyleSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,24 +22,21 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -190,8 +182,6 @@ public class MainActivity extends AppCompatActivity {
                 String categoryIDCorrect = !Objects.equals(data.getStringExtra("categoryID"), "1") ? categoryID : "1";
                 LocalDateTime now = LocalDateTime.now();
 
-                showToast(categoryIDCorrect, Toast.LENGTH_SHORT);
-
                 SQLiteDatabase db = dbHelper.getWritableDatabase();
 
                 ContentValues values = new ContentValues();
@@ -209,20 +199,10 @@ public class MainActivity extends AppCompatActivity {
                 adapter.setTodoItems(todoItems);
                 adapter.notifyDataSetChanged();
 
-                /*if (date != null && time != null) {
-
-                    Intent intent = new Intent(MainActivity.this, ReminderBroadcast.class);
-                    PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
-                    LocalDateTime dateTime = LocalDateTime.parse(date + " " + time, formatter);
-
-                    long timeatAdd = System.currentTimeMillis();
-                    long tens = 1000 * 10;
-
-                    AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, timeatAdd + tens, pendingIntent);
-                }*/
+                if (!date.isEmpty() && !time.isEmpty()) {
+                    long timeAt = timeMillis(date, time, now);
+                    setAlarmNotification(title, "Popraw się", timeAt);
+                }
 
                 CharSequence text = "Dodano nowe zadanie";
                 showToast(text, Toast.LENGTH_SHORT);
@@ -235,6 +215,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void showToast(CharSequence text, int duration) {
         Toast.makeText(MainActivity.this, text, duration).show();
+    }
+
+    private void setAlarmNotification(String title, String text, long timeAt) {
+        Intent intent = new Intent(this, ReminderBroadcast.class);
+        intent.putExtra("title", title);
+        intent.putExtra("text", text);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, Intent.FILL_IN_DATA | PendingIntent.FLAG_IMMUTABLE);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, timeAt, pendingIntent);
+    }
+
+    private long timeMillis(String date, String time, LocalDateTime now) {
+        LocalDate reminderDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("MM-dd-yyyy"));
+        LocalTime reminderTime = LocalTime.parse(time);
+
+        LocalDateTime reminderDateTime = LocalDateTime.of(reminderDate, reminderTime);
+        Duration duration = Duration.between(now, reminderDateTime);
+        return duration.toMillis();
     }
 
     private void initRecyclerView() {
@@ -378,15 +378,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "LemubitReminderChannel";
-            String description = "Channel for Lemubit Reminder";
+            CharSequence name = "PumReminderChannel";
+            String description = "Channel for Pum Reminder";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("notifyLemubit", name, importance);
+            NotificationChannel channel = new NotificationChannel("notifyPum", name, importance);
             channel.setDescription(description);
 
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
-
         }
     }
 
