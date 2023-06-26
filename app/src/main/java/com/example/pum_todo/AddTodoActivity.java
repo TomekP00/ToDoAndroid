@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -130,7 +131,6 @@ public class AddTodoActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent resultIntent = new Intent();
 
                 String correctTitle = title.getText().toString();
                 String correctNote = note.getText().toString();
@@ -139,15 +139,23 @@ public class AddTodoActivity extends AppCompatActivity {
                 String correctDate = editText.getText().toString();
                 String correctTime = timeText.getText().toString();
 
-                resultIntent.putExtra("title", correctTitle);
-                resultIntent.putExtra("note", correctNote);
-                resultIntent.putExtra("date", correctDate);
-                resultIntent.putExtra("time", correctTime);
-                resultIntent.putExtra("categoryID", categoryId);
+                if (correctTitle.isEmpty()) {
+                    Toast.makeText(AddTodoActivity.this, "Uzupełnij pola", Toast.LENGTH_SHORT).show();
+                } else if (!correctDate.isEmpty() && correctTime.isEmpty()) {
+                    Toast.makeText(AddTodoActivity.this, "Uzupełnij czas", Toast.LENGTH_SHORT).show();
+                } else if (correctDate.isEmpty() && !correctTime.isEmpty()) {
+                    Toast.makeText(AddTodoActivity.this, "Uzupełnij date", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("title", correctTitle);
+                    resultIntent.putExtra("note", correctNote);
+                    resultIntent.putExtra("date", correctDate);
+                    resultIntent.putExtra("time", correctTime);
+                    resultIntent.putExtra("categoryID", categoryId);
 
-                setResult(RESULT_OK, resultIntent);
-                finish();
-
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                }
             }
         });
     }
